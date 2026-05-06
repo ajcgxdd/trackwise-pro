@@ -59,7 +59,7 @@ export function ShipmentMap({ shipments, geofences = [], highlightId, showRoutes
       const isHi = highlightId && s.id === highlightId;
 
       if (showRoutes) {
-        L.polyline(s.routePolyline.map((p) => [p.lat, p.lng]), {
+        L.polyline(s.routePolyline.map((p) => [p.lat, p.lng] as [number, number]), {
           color,
           weight: isHi ? 3 : 1.5,
           opacity: isHi ? 0.9 : 0.45,

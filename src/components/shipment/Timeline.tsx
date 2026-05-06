@@ -5,10 +5,9 @@ import { cn } from "@/lib/utils";
 
 export function Timeline({ shipment }: { shipment: Shipment }) {
   const isException = shipment.status === "exception";
+  const lastNonException = [...shipment.timeline].reverse().find((t) => t.status !== "exception");
   const reachedIdx = isException
-    ? STATUS_FLOW.indexOf(
-        (shipment.timeline.findLast?.((t) => t.status !== "exception")?.status ?? "in_transit") as ShipmentStatus
-      )
+    ? STATUS_FLOW.indexOf((lastNonException?.status ?? "in_transit") as ShipmentStatus)
     : STATUS_FLOW.indexOf(shipment.status);
 
   return (
