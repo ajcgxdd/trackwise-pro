@@ -1,6 +1,6 @@
 ## Logistics Tracker — MVP Plan
 
-A polished, demo-ready logistics dashboard. Since this is a college project requiring **MongoDB**, and Lovable's frontend can't talk to MongoDB directly without a backend host, we'll structure the app so it works as a complete demo *now* (with seeded data) and is wired to plug into your MongoDB backend later.
+A polished, demo-ready logistics dashboard. Since this is a college project requiring **MongoDB**, and Lovable's frontend can't talk to MongoDB directly without a backend host, we'll structure the app so it works as a complete demo _now_ (with seeded data) and is wired to plug into your MongoDB backend later.
 
 ### Architecture
 
@@ -23,22 +23,26 @@ A polished, demo-ready logistics dashboard. Since this is a college project requ
 ### Feature breakdown
 
 **Core tracking & visibility**
+
 - Leaflet + OpenStreetMap. Custom truck/package markers, route polyline (origin → current → destination), animated current-location pulse.
 - Vertical status stepper: Ordered → Picked Up → In Transit → Out for Delivery → Delivered (with timestamps + actor).
 - Dynamic ETA: `remainingDistance / avgSpeed` recomputed from live position; haversine util in `src/lib/geo.ts`.
 - Live simulation: a small interval ticks shipment positions along their route so the demo feels real-time.
 
 **Orders & inventory**
+
 - SKU table inside shipment detail (item, qty, weight, value).
 - QR/Barcode scanner using `html5-qrcode` (camera). Scanning a tracking ID jumps to that shipment and logs a check-in/out event.
 - Proof of Delivery: photo upload (stored as base64/object URL in demo; swap to S3/GridFS later) + signature pad (`react-signature-canvas`).
 
 **Alerts & notifications**
+
 - Geofence definitions per warehouse (lat/lng + radius). Client-side check on each tick → toast + alert row when entering/leaving.
 - Exception detection: delays vs ETA, route deviation (distance from planned polyline), temperature breaches for perishable shipments.
 - "Notify customer" button — stub that records a notification event (real Twilio/Resend wiring documented but out of MVP scope per your selection).
 
 **Analytics & admin**
+
 - Carrier performance table: on-time %, avg delay, cost/km, total shipments. Sortable.
 - Route optimization: nearest-neighbor TSP heuristic in `src/lib/routing.ts` for a list of stops; visualize optimized vs original on map.
 - Audit log: every status change, edit, scan, PoD upload recorded with `{actor, action, before, after, timestamp}`.
@@ -46,6 +50,7 @@ A polished, demo-ready logistics dashboard. Since this is a college project requ
 ### Design direction
 
 Technical, efficient, reliability-focused. Dark-first dashboard aesthetic:
+
 - Deep slate/near-black background, single confident accent (electric cyan/amber for "in transit"), semantic status colors (success/warn/danger).
 - Mono-style numerics for IDs, ETAs, coords. Inter for UI, JetBrains Mono for data.
 - Dense but breathable: card grid, subtle dividers, micro-animations on status changes (framer-motion).
@@ -63,11 +68,13 @@ Technical, efficient, reliability-focused. Dark-first dashboard aesthetic:
 - A `MIGRATING_TO_MONGODB.md` doc explaining how to point `src/lib/api.ts` at your Express/Mongo backend (endpoints, schemas matching the TS types).
 
 ### Out of scope for this MVP (can add later)
+
 - Real auth & roles
 - Live Twilio/Resend sending (UI stub only)
 - Real backend MongoDB server (you'll host that separately for submission)
 
 ### Build order
+
 1. Types, seed data, API stub, design tokens
 2. Leaflet map component + dashboard page
 3. Shipment list + detail (timeline, SKUs, ETA, audit)

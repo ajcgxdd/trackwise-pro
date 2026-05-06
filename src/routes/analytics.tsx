@@ -37,30 +37,62 @@ function AnalyticsPage() {
   const original = STOPS.map((_, i) => i);
   const optimal = useMemo(() => optimizeStops(STOPS.map((s) => s.coords)), []);
   const order = optimized ? optimal : original;
-  const dist = routeDistance(STOPS.map((s) => s.coords), order);
-  const dOriginal = routeDistance(STOPS.map((s) => s.coords), original);
-  const savings = ((dOriginal - routeDistance(STOPS.map((s) => s.coords), optimal)) / dOriginal) * 100;
+  const dist = routeDistance(
+    STOPS.map((s) => s.coords),
+    order,
+  );
+  const dOriginal = routeDistance(
+    STOPS.map((s) => s.coords),
+    original,
+  );
+  const savings =
+    ((dOriginal -
+      routeDistance(
+        STOPS.map((s) => s.coords),
+        optimal,
+      )) /
+      dOriginal) *
+    100;
 
   // Build a fake "shipment" to draw the chosen stop sequence as a route on the map
   const previewShipment: Shipment = {
-    id: "preview", trackingId: "ROUTE", carrier: "swft", status: "in_transit",
+    id: "preview",
+    trackingId: "ROUTE",
+    carrier: "swft",
+    status: "in_transit",
     origin: { name: STOPS[order[0]].name, coords: STOPS[order[0]].coords },
-    destination: { name: STOPS[order[order.length - 1]].name, coords: STOPS[order[order.length - 1]].coords },
+    destination: {
+      name: STOPS[order[order.length - 1]].name,
+      coords: STOPS[order[order.length - 1]].coords,
+    },
     current: STOPS[order[Math.floor(order.length / 2)]].coords,
     routePolyline: order.map((i) => STOPS[i].coords),
-    progress: 0.5, speedKmh: 0, perishable: false,
-    createdAt: new Date().toISOString(), promisedAt: new Date().toISOString(), etaAt: new Date().toISOString(),
-    customer: { name: "", phone: "", email: "" }, skus: [], timeline: [], audit: [],
-    costUsd: 0, distanceKm: dist,
+    progress: 0.5,
+    speedKmh: 0,
+    perishable: false,
+    createdAt: new Date().toISOString(),
+    promisedAt: new Date().toISOString(),
+    etaAt: new Date().toISOString(),
+    customer: { name: "", phone: "", email: "" },
+    skus: [],
+    timeline: [],
+    audit: [],
+    costUsd: 0,
+    distanceKm: dist,
   };
 
-  const exceptions = shipments.filter((s) => s.status === "exception" || new Date(s.etaAt).getTime() > new Date(s.promisedAt).getTime());
+  const exceptions = shipments.filter(
+    (s) =>
+      s.status === "exception" || new Date(s.etaAt).getTime() > new Date(s.promisedAt).getTime(),
+  );
 
   return (
     <div className="p-4 md:p-6 space-y-5 max-w-[1600px] mx-auto">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-        <p className="text-sm text-muted-foreground">Carrier benchmarks, route optimization, and exception reporting.</p>
+        <p className="text-sm text-muted-foreground">
+          Carrier benchmarks, route optimization, and exception reporting.
+        </p>
       </div>
 
       <Card className="p-4 bg-card/60">
@@ -78,26 +110,45 @@ function AnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {[...carriers].sort((a, b) => b.onTimePct - a.onTimePct).map((c) => (
-                  <tr key={c.id} className="border-t border-border">
-                    <td className="py-2.5">{c.name}</td>
-                    <td className="py-2.5 text-right mono text-success">{c.onTimePct}%</td>
-                    <td className="py-2.5 text-right mono">{c.avgDelayHrs}h</td>
-                    <td className="py-2.5 text-right mono">${c.costPerKm}</td>
-                    <td className="py-2.5 text-right mono">{c.totalShipments.toLocaleString()}</td>
-                  </tr>
-                ))}
+                {[...carriers]
+                  .sort((a, b) => b.onTimePct - a.onTimePct)
+                  .map((c) => (
+                    <tr key={c.id} className="border-t border-border">
+                      <td className="py-2.5">{c.name}</td>
+                      <td className="py-2.5 text-right mono text-success">{c.onTimePct}%</td>
+                      <td className="py-2.5 text-right mono">{c.avgDelayHrs}h</td>
+                      <td className="py-2.5 text-right mono">${c.costPerKm}</td>
+                      <td className="py-2.5 text-right mono">
+                        {c.totalShipments.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
           <div className="h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={carriers.map((c) => ({ name: c.name.split(" ")[0], onTime: c.onTimePct, cost: c.costPerKm * 100 }))}>
-                <CartesianGrid stroke="oklch(0.3 0.02 250)" strokeDasharray="3 3" vertical={false} />
+              <BarChart
+                data={carriers.map((c) => ({
+                  name: c.name.split(" ")[0],
+                  onTime: c.onTimePct,
+                  cost: c.costPerKm * 100,
+                }))}
+              >
+                <CartesianGrid
+                  stroke="oklch(0.3 0.02 250)"
+                  strokeDasharray="3 3"
+                  vertical={false}
+                />
                 <XAxis dataKey="name" stroke="oklch(0.68 0.02 250)" fontSize={11} />
                 <YAxis stroke="oklch(0.68 0.02 250)" fontSize={11} />
                 <Tooltip
-                  contentStyle={{ background: "oklch(0.22 0.018 250)", border: "1px solid oklch(0.3 0.02 250)", borderRadius: 8, fontSize: 12 }}
+                  contentStyle={{
+                    background: "oklch(0.22 0.018 250)",
+                    border: "1px solid oklch(0.3 0.02 250)",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
                   labelStyle={{ color: "oklch(0.96 0.005 250)" }}
                 />
                 <Bar dataKey="onTime" fill="oklch(0.78 0.16 195)" radius={[4, 4, 0, 0]} />
@@ -111,14 +162,20 @@ function AnalyticsPage() {
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div>
             <h2 className="text-sm font-semibold">Route optimization · {STOPS.length} stops</h2>
-            <p className="text-xs text-muted-foreground">Nearest-neighbor heuristic for last-mile sequencing</p>
+            <p className="text-xs text-muted-foreground">
+              Nearest-neighbor heuristic for last-mile sequencing
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-xs mono">
               {optimized ? "optimized" : "original"}: <b>{dist.toFixed(0)} km</b>
               <span className="text-success ml-2">−{savings.toFixed(1)}% potential</span>
             </span>
-            <Button size="sm" variant={optimized ? "default" : "secondary"} onClick={() => setOptimized((v) => !v)}>
+            <Button
+              size="sm"
+              variant={optimized ? "default" : "secondary"}
+              onClick={() => setOptimized((v) => !v)}
+            >
               <Sparkles className="size-3.5" /> {optimized ? "Show original" : "Optimize route"}
             </Button>
           </div>
@@ -142,10 +199,15 @@ function AnalyticsPage() {
         ) : (
           <ul className="space-y-2 text-sm">
             {exceptions.map((s) => (
-              <li key={s.id} className="flex items-center justify-between p-2.5 rounded-md border border-destructive/20 bg-destructive/5">
+              <li
+                key={s.id}
+                className="flex items-center justify-between p-2.5 rounded-md border border-destructive/20 bg-destructive/5"
+              >
                 <div>
                   <div className="mono text-xs">{s.trackingId}</div>
-                  <div className="text-xs text-muted-foreground">{s.origin.name} → {s.destination.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {s.origin.name} → {s.destination.name}
+                  </div>
                 </div>
                 <div className="text-xs text-destructive mono">
                   {s.status === "exception" ? "exception reported" : "ETA past promised window"}

@@ -1,5 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, PackageSearch, ScanLine, BarChart3, ScrollText, Truck } from "lucide-react";
+import {
+  LayoutDashboard,
+  PackageSearch,
+  ScanLine,
+  BarChart3,
+  ScrollText,
+  Truck,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -35,7 +42,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
                   active
                     ? "bg-primary/10 text-primary border border-primary/20"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                 )}
               >
                 <Icon className="size-4" />
@@ -60,7 +67,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <nav className="flex gap-1">
             {NAV.map(({ to, icon: Icon }) => (
-              <Link key={to} to={to} className="p-2 rounded-md text-muted-foreground [&.active]:text-primary" activeProps={{ className: "active" }}>
+              <Link
+                key={to}
+                to={to}
+                className="p-2 rounded-md text-muted-foreground [&.active]:text-primary"
+                activeProps={{ className: "active" }}
+              >
                 <Icon className="size-4" />
               </Link>
             ))}

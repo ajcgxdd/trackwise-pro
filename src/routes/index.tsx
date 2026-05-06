@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { ShipmentMap } from "@/components/map/ShipmentMap";
 import { StatusBadge } from "@/components/shipment/StatusBadge";
 import { Card } from "@/components/ui/card";
-import { getShipments, getGeofences, tickPositions } from "@/lib/api";
+import { getShipments, getGeofences, tickPositions, seedDatabase } from "@/lib/api";
 import type { Shipment, Geofence } from "@/types/shipment";
 import { Link } from "@tanstack/react-router";
-import { Package, Truck, AlertTriangle, CheckCircle2, ArrowRight } from "lucide-react";
+import { Package, Truck, AlertTriangle, CheckCircle2, ArrowRight, Database } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/")({
@@ -19,12 +19,24 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-function Kpi({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent: string }) {
+function Kpi({
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: any;
+  label: string;
+  value: string | number;
+  accent: string;
+}) {
   return (
     <Card className="p-4 bg-card/60 border-border">
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mono">{label}</div>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mono">
+            {label}
+          </div>
           <div className="mt-1 text-2xl font-semibold mono">{value}</div>
         </div>
         <div className={`size-9 rounded-md grid place-items-center ${accent}`}>
@@ -54,7 +66,9 @@ function Dashboard() {
     return () => clearInterval(id);
   }, []);
 
-  const inTransit = shipments.filter((s) => ["in_transit", "out_for_delivery", "picked_up"].includes(s.status));
+  const inTransit = shipments.filter((s) =>
+    ["in_transit", "out_for_delivery", "picked_up"].includes(s.status),
+  );
   const delivered = shipments.filter((s) => s.status === "delivered");
   const exceptions = shipments.filter((s) => s.status === "exception");
   const recent = [...shipments].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)).slice(0, 6);
@@ -64,18 +78,54 @@ function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Operations Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Real-time visibility across all active lanes</p>
+          <p className="text-sm text-muted-foreground">
+            Real-time visibility across all active lanes
+          </p>
         </div>
-        <div className="text-[11px] mono text-muted-foreground flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-success animate-pulse" /> live · refresh 3s
+        <div className="flex items-center gap-3">
+          {shipments.length === 0 && (
+            <button 
+              onClick={async () => {
+                await seedDatabase();
+                window.location.reload();
+              }}
+              className="text-[11px] mono flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded"
+            >
+              <Database className="size-3" />
+              SEED DATABASE
+            </button>
+          )}
+          <div className="text-[11px] mono text-muted-foreground flex items-center gap-2">
+            <span className="size-1.5 rounded-full bg-success animate-pulse" /> live · refresh 3s
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi icon={Package} label="Total shipments" value={shipments.length} accent="bg-primary/15 text-primary" />
-        <Kpi icon={Truck} label="In transit" value={inTransit.length} accent="bg-info/15 text-info" />
-        <Kpi icon={CheckCircle2} label="Delivered" value={delivered.length} accent="bg-success/15 text-success" />
-        <Kpi icon={AlertTriangle} label="Exceptions" value={exceptions.length} accent="bg-destructive/15 text-destructive" />
+        <Kpi
+          icon={Package}
+          label="Total shipments"
+          value={shipments.length}
+          accent="bg-primary/15 text-primary"
+        />
+        <Kpi
+          icon={Truck}
+          label="In transit"
+          value={inTransit.length}
+          accent="bg-info/15 text-info"
+        />
+        <Kpi
+          icon={CheckCircle2}
+          label="Delivered"
+          value={delivered.length}
+          accent="bg-success/15 text-success"
+        />
+        <Kpi
+          icon={AlertTriangle}
+          label="Exceptions"
+          value={exceptions.length}
+          accent="bg-destructive/15 text-destructive"
+        />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
@@ -83,7 +133,9 @@ function Dashboard() {
           <div className="flex items-center justify-between p-4 border-b border-border">
             <div>
               <h2 className="text-sm font-semibold">Live network map</h2>
-              <p className="text-xs text-muted-foreground">{shipments.length} assets · {geos.length} geofences</p>
+              <p className="text-xs text-muted-foreground">
+                {shipments.length} assets · {geos.length} geofences
+              </p>
             </div>
           </div>
           <div className="h-[480px]">
@@ -94,7 +146,10 @@ function Dashboard() {
         <Card className="p-4 bg-card/60">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold">Recent activity</h2>
-            <Link to="/shipments" className="text-xs text-primary hover:underline flex items-center gap-1">
+            <Link
+              to="/shipments"
+              className="text-xs text-primary hover:underline flex items-center gap-1"
+            >
               View all <ArrowRight className="size-3" />
             </Link>
           </div>
@@ -114,7 +169,8 @@ function Dashboard() {
                     {s.origin.name} → {s.destination.name}
                   </div>
                   <div className="mt-1 text-[10px] mono text-muted-foreground">
-                    {formatDistanceToNow(new Date(s.createdAt), { addSuffix: true })} · {Math.round(s.progress * 100)}%
+                    {formatDistanceToNow(new Date(s.createdAt), { addSuffix: true })} ·{" "}
+                    {Math.round(s.progress * 100)}%
                   </div>
                 </Link>
               </li>

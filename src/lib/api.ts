@@ -1,11 +1,6 @@
 /**
- * API layer — currently in-memory using seeded data.
- *
- * To migrate to MongoDB: replace the bodies of these functions with `fetch`
- * calls to your Express+MongoDB backend. The TypeScript signatures map
- * directly to your REST endpoints (see MIGRATING_TO_MONGODB.md).
+ * API layer — connecting to Express+MongoDB backend.
  */
-import { SHIPMENTS, CARRIERS, GEOFENCES } from "@/data/seed";
 import type {
   Shipment,
   ShipmentStatus,
@@ -15,76 +10,98 @@ import type {
   AuditEntry,
 } from "@/types/shipment";
 import { pointAtProgress } from "@/lib/geo";
+import { SHIPMENTS, CARRIERS, GEOFENCES } from "@/data/seed"; // Imported for seeding the database
 
-let shipments: Shipment[] = SHIPMENTS;
+// Configure via your VITE_API_URL environment variable, falling back to local fallback
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-const delay = (ms = 120) => new Promise((r) => setTimeout(r, ms));
+export async function seedDatabase() {
+  const res = await fetch(`${API_URL}/api/seed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      shipments: SHIPMENTS,
+      carriers: CARRIERS,
+      geofences: GEOFENCES,
+    }),
+  });
+  if (!res.ok) throw new Error("Failed to seed database");
+  return res.json();
+}
+
+// ---
+// Helper: Only for client-side local coordinate ticking to avoid DB spam
+let inMemoryShipmentsForTick: Shipment[] = [];
+// ---
 
 export async function getShipments(): Promise<Shipment[]> {
-  await delay();
-  return shipments;
+  const res = await fetch(`${API_URL}/api/shipments`);
+  if (!res.ok) throw new Error("Failed to load shipments");
+  const data = await res.json();
+  inMemoryShipmentsForTick = data;
+  return data;
 }
 
 export async function getShipmentById(id: string): Promise<Shipment | undefined> {
-  await delay();
-  return shipments.find((s) => s.id === id || s.trackingId === id);
+  const res = await fetch(`${API_URL}/api/shipments/${id}`);
+  if (!res.ok) {
+    if (res.status === 404) return undefined;
+    throw new Error("Failed to load shipment");
+  }
+  return res.json();
 }
 
 export async function getCarriers(): Promise<Carrier[]> {
-  await delay();
-  return CARRIERS;
+  const res = await fetch(`${API_URL}/api/carriers`);
+  if (!res.ok) throw new Error("Failed to load carriers");
+  return res.json();
 }
 
 export async function getGeofences(): Promise<Geofence[]> {
-  await delay();
-  return GEOFENCES;
+  const res = await fetch(`${API_URL}/api/geofences`);
+  if (!res.ok) throw new Error("Failed to load geofences");
+  return res.json();
 }
 
 export async function updateShipmentStatus(
   id: string,
   status: ShipmentStatus,
-  actor = "operator@lx"
+  actor = "operator@lx",
 ): Promise<Shipment | undefined> {
-  const s = shipments.find((x) => x.id === id);
-  if (!s) return undefined;
-  const before = s.status;
-  s.status = status;
-  s.timeline.push({ status, at: new Date().toISOString() });
-  s.audit.push({
-    id: `a-${Date.now()}`,
-    at: new Date().toISOString(),
-    actor,
-    action: `status → ${status}`,
-    before,
-    after: status,
+  const res = await fetch(`${API_URL}/api/shipments/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status, actor }),
   });
-  return s;
+  if (!res.ok) {
+    if (res.status === 404) return undefined;
+    throw new Error("Failed to update status");
+  }
+  return res.json();
 }
 
 export async function addProofOfDelivery(
   id: string,
   pod: ProofOfDelivery,
-  actor = "driver@lx"
+  actor = "driver@lx",
 ): Promise<Shipment | undefined> {
-  const s = shipments.find((x) => x.id === id);
-  if (!s) return undefined;
-  s.pod = { ...pod, at: new Date().toISOString() };
-  s.status = "delivered";
-  s.progress = 1;
-  s.timeline.push({ status: "delivered", at: new Date().toISOString(), location: s.destination.name });
-  s.audit.push({
-    id: `a-${Date.now()}`,
-    at: new Date().toISOString(),
-    actor,
-    action: "Proof of delivery uploaded",
-    after: "delivered",
+  const res = await fetch(`${API_URL}/api/shipments/${id}/pod`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pod, actor }),
   });
-  return s;
+  if (!res.ok) {
+    if (res.status === 404) return undefined;
+    throw new Error("Failed to update proof of delivery");
+  }
+  return res.json();
 }
 
 /** Used by the live simulation tick to bump progress in-transit. */
 export function tickPositions(stepKmPerTick = 6): Shipment[] {
-  shipments = shipments.map((s) => {
+  // In a full system, you would push location data to the backend periodically.
+  // For the UI simulation, we keep this client-side for smooth 60fps local animation
+  inMemoryShipmentsForTick = inMemoryShipmentsForTick.map((s) => {
     if (!["in_transit", "out_for_delivery", "picked_up"].includes(s.status)) return s;
     const stepFrac = stepKmPerTick / Math.max(1, s.distanceKm);
     const newProgress = Math.min(1, s.progress + stepFrac);
@@ -96,21 +113,19 @@ export function tickPositions(stepKmPerTick = 6): Shipment[] {
     if (newProgress >= 0.92 && s.status === "in_transit") next.status = "out_for_delivery";
     return next;
   });
-  return shipments;
+  return inMemoryShipmentsForTick;
 }
 
-export function appendAudit(id: string, entry: Omit<AuditEntry, "id" | "at">) {
-  const s = shipments.find((x) => x.id === id);
-  if (!s) return;
-  s.audit.push({
-    id: `a-${Date.now()}`,
-    at: new Date().toISOString(),
-    ...entry,
+export async function appendAudit(id: string, entry: Omit<AuditEntry, "id" | "at">) {
+  await fetch(`${API_URL}/api/shipments/${id}/audit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entry }),
   });
 }
 
-export function getAllAudit(): (AuditEntry & { trackingId: string })[] {
-  return shipments
-    .flatMap((s) => s.audit.map((a) => ({ ...a, trackingId: s.trackingId })))
-    .sort((a, b) => (a.at < b.at ? 1 : -1));
+export async function getAllAudit(): Promise<(AuditEntry & { trackingId: string })[]> {
+  const res = await fetch(`${API_URL}/api/audit`);
+  if (!res.ok) throw new Error("Failed to load audit logs");
+  return res.json();
 }

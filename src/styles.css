@@ -118,17 +118,25 @@
     border-color: var(--color-border);
   }
 
-  html, body {
+  html,
+  body {
     font-family: var(--font-sans);
   }
 
   body {
-    background: radial-gradient(ellipse at top, oklch(0.22 0.02 250) 0%, var(--color-background) 60%);
+    background: radial-gradient(
+      ellipse at top,
+      oklch(0.22 0.02 250) 0%,
+      var(--color-background) 60%
+    );
     color: var(--color-foreground);
     min-height: 100vh;
   }
 
-  .font-mono, .mono { font-family: var(--font-mono); }
+  .font-mono,
+  .mono {
+    font-family: var(--font-mono);
+  }
 }
 
 /* Leaflet dark theme */
@@ -143,7 +151,9 @@
   background: oklch(0.18 0.015 250 / 0.7) !important;
   color: oklch(0.6 0.02 250) !important;
 }
-.leaflet-control-attribution a { color: oklch(0.78 0.16 195) !important; }
+.leaflet-control-attribution a {
+  color: oklch(0.78 0.16 195) !important;
+}
 .leaflet-control-zoom a {
   background: oklch(0.22 0.018 250) !important;
   color: oklch(0.96 0.005 250) !important;
@@ -151,8 +161,14 @@
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.6); opacity: 0.9; }
-  100% { transform: scale(2.4); opacity: 0; }
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
 }
 .pulse-ring::before {
   content: "";
@@ -163,8 +179,7 @@
   animation: pulse-ring 1.6s ease-out infinite;
 }
 
-  body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-  }
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
 }

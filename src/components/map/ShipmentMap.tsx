@@ -20,16 +20,26 @@ const STATUS_COLOR: Record<string, string> = {
   exception: "#f87171",
 };
 
-export function ShipmentMap({ shipments, geofences = [], highlightId, showRoutes = true, height = "100%", onSelect }: Props) {
+export function ShipmentMap({
+  shipments,
+  geofences = [],
+  highlightId,
+  showRoutes = true,
+  height = "100%",
+  onSelect,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
 
   useEffect(() => {
     if (!ref.current || mapRef.current) return;
-    const map = L.map(ref.current, { zoomControl: true, attributionControl: true }).setView([20.5, 78.9], 5);
+    const map = L.map(ref.current, { zoomControl: true, attributionControl: true }).setView(
+      [20.5, 78.9],
+      5,
+    );
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; OpenStreetMap',
+      attribution: "&copy; OpenStreetMap",
       maxZoom: 19,
     }).addTo(map);
     mapRef.current = map;
@@ -49,7 +59,9 @@ export function ShipmentMap({ shipments, geofences = [], highlightId, showRoutes
         weight: 1,
         fillColor: "#22d3ee",
         fillOpacity: 0.06,
-      }).bindTooltip(`<b>${g.name}</b><br/>geofence ${g.radiusKm}km`, { className: "lx-tip" }).addTo(layer);
+      })
+        .bindTooltip(`<b>${g.name}</b><br/>geofence ${g.radiusKm}km`, { className: "lx-tip" })
+        .addTo(layer);
     });
 
     const bounds: L.LatLngExpression[] = [];
@@ -59,20 +71,35 @@ export function ShipmentMap({ shipments, geofences = [], highlightId, showRoutes
       const isHi = highlightId && s.id === highlightId;
 
       if (showRoutes) {
-        L.polyline(s.routePolyline.map((p) => [p.lat, p.lng] as [number, number]), {
-          color,
-          weight: isHi ? 3 : 1.5,
-          opacity: isHi ? 0.9 : 0.45,
-          dashArray: "6 6",
-        }).addTo(layer);
+        L.polyline(
+          s.routePolyline.map((p) => [p.lat, p.lng] as [number, number]),
+          {
+            color,
+            weight: isHi ? 3 : 1.5,
+            opacity: isHi ? 0.9 : 0.45,
+            dashArray: "6 6",
+          },
+        ).addTo(layer);
       }
 
       L.circleMarker([s.origin.coords.lat, s.origin.coords.lng], {
-        radius: 4, color: "#94a3b8", fillColor: "#1f2937", fillOpacity: 1, weight: 1.5,
-      }).bindTooltip(`Origin · ${s.origin.name}`).addTo(layer);
+        radius: 4,
+        color: "#94a3b8",
+        fillColor: "#1f2937",
+        fillOpacity: 1,
+        weight: 1.5,
+      })
+        .bindTooltip(`Origin · ${s.origin.name}`)
+        .addTo(layer);
       L.circleMarker([s.destination.coords.lat, s.destination.coords.lng], {
-        radius: 4, color: color, fillColor: color, fillOpacity: 1, weight: 1.5,
-      }).bindTooltip(`Destination · ${s.destination.name}`).addTo(layer);
+        radius: 4,
+        color: color,
+        fillColor: color,
+        fillOpacity: 1,
+        weight: 1.5,
+      })
+        .bindTooltip(`Destination · ${s.destination.name}`)
+        .addTo(layer);
 
       const icon = L.divIcon({
         className: "",
@@ -89,7 +116,7 @@ export function ShipmentMap({ shipments, geofences = [], highlightId, showRoutes
           ${s.origin.name} → ${s.destination.name}<br/>
           <span style="color:${color};">● ${s.status.replace(/_/g, " ")}</span> · ${Math.round(s.progress * 100)}%
         </div>`,
-        { className: "lx-tip" }
+        { className: "lx-tip" },
       );
       if (onSelect) m.on("click", () => onSelect(s.id));
       bounds.push([s.current.lat, s.current.lng]);
@@ -101,9 +128,22 @@ export function ShipmentMap({ shipments, geofences = [], highlightId, showRoutes
       map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40], maxZoom: 7 });
     } else if (highlightId) {
       const s = shipments.find((x) => x.id === highlightId);
-      if (s) map.fitBounds([[s.origin.coords.lat, s.origin.coords.lng], [s.destination.coords.lat, s.destination.coords.lng]], { padding: [60, 60] });
+      if (s)
+        map.fitBounds(
+          [
+            [s.origin.coords.lat, s.origin.coords.lng],
+            [s.destination.coords.lat, s.destination.coords.lng],
+          ],
+          { padding: [60, 60] },
+        );
     }
   }, [shipments, geofences, highlightId, showRoutes, onSelect]);
 
-  return <div ref={ref} style={{ height, width: "100%" }} className="rounded-lg overflow-hidden border border-border" />;
+  return (
+    <div
+      ref={ref}
+      style={{ height, width: "100%" }}
+      className="rounded-lg overflow-hidden border border-border"
+    />
+  );
 }

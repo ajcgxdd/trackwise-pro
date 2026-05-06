@@ -6,15 +6,15 @@ need any changes.
 
 ## Suggested REST endpoints
 
-| Function                   | Method | Path                                  |
-| -------------------------- | ------ | ------------------------------------- |
-| `getShipments`             | GET    | `/api/shipments`                      |
-| `getShipmentById`          | GET    | `/api/shipments/:id`                  |
-| `updateShipmentStatus`     | PATCH  | `/api/shipments/:id/status`           |
-| `addProofOfDelivery`       | POST   | `/api/shipments/:id/pod`              |
-| `getCarriers`              | GET    | `/api/carriers`                       |
-| `getGeofences`             | GET    | `/api/geofences`                      |
-| `getAllAudit`              | GET    | `/api/audit`                          |
+| Function               | Method | Path                        |
+| ---------------------- | ------ | --------------------------- |
+| `getShipments`         | GET    | `/api/shipments`            |
+| `getShipmentById`      | GET    | `/api/shipments/:id`        |
+| `updateShipmentStatus` | PATCH  | `/api/shipments/:id/status` |
+| `addProofOfDelivery`   | POST   | `/api/shipments/:id/pod`    |
+| `getCarriers`          | GET    | `/api/carriers`             |
+| `getGeofences`         | GET    | `/api/geofences`            |
+| `getAllAudit`          | GET    | `/api/audit`                |
 
 ## MongoDB collections
 

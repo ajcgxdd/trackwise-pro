@@ -27,7 +27,6 @@ export function optimizeStops(stops: LatLng[]): number[] {
 
 export function routeDistance(stops: LatLng[], order: number[]): number {
   let d = 0;
-  for (let i = 1; i < order.length; i++)
-    d += haversine(stops[order[i - 1]], stops[order[i]]);
+  for (let i = 1; i < order.length; i++) d += haversine(stops[order[i - 1]], stops[order[i]]);
   return d;
 }

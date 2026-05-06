@@ -6,10 +6,38 @@ const hours = (h: number) => new Date(now + h * 3600_000).toISOString();
 const ago = (h: number) => new Date(now - h * 3600_000).toISOString();
 
 export const CARRIERS: Carrier[] = [
-  { id: "swft", name: "SwiftLine Logistics", onTimePct: 94.2, avgDelayHrs: 0.8, costPerKm: 0.42, totalShipments: 1284 },
-  { id: "blz", name: "Blaze Freight Co.", onTimePct: 88.7, avgDelayHrs: 1.6, costPerKm: 0.31, totalShipments: 967 },
-  { id: "nrt", name: "NorthStar Cargo", onTimePct: 91.3, avgDelayHrs: 1.1, costPerKm: 0.38, totalShipments: 1532 },
-  { id: "atl", name: "Atlas Express", onTimePct: 82.5, avgDelayHrs: 2.4, costPerKm: 0.27, totalShipments: 612 },
+  {
+    id: "swft",
+    name: "SwiftLine Logistics",
+    onTimePct: 94.2,
+    avgDelayHrs: 0.8,
+    costPerKm: 0.42,
+    totalShipments: 1284,
+  },
+  {
+    id: "blz",
+    name: "Blaze Freight Co.",
+    onTimePct: 88.7,
+    avgDelayHrs: 1.6,
+    costPerKm: 0.31,
+    totalShipments: 967,
+  },
+  {
+    id: "nrt",
+    name: "NorthStar Cargo",
+    onTimePct: 91.3,
+    avgDelayHrs: 1.1,
+    costPerKm: 0.38,
+    totalShipments: 1532,
+  },
+  {
+    id: "atl",
+    name: "Atlas Express",
+    onTimePct: 82.5,
+    avgDelayHrs: 2.4,
+    costPerKm: 0.27,
+    totalShipments: 612,
+  },
 ];
 
 export const GEOFENCES: Geofence[] = [
@@ -63,9 +91,7 @@ const rows: SeedRow[] = [
     perishable: true,
     speed: 54,
     customer: { name: "Meera Iyer", phone: "+91 98101 33445", email: "meera@example.com" },
-    skus: [
-      { name: "Cold-chain Vaccines (Vial/100)", qty: 8, weightKg: 6.8, value: 4200 },
-    ],
+    skus: [{ name: "Cold-chain Vaccines (Vial/100)", qty: 8, weightKg: 6.8, value: 4200 }],
     promisedInH: 2,
     createdAgoH: 18,
     costUsd: 380,
@@ -178,7 +204,12 @@ function buildShipment(r: SeedRow, idx: number): Shipment {
   if (r.status === "delivered")
     timeline.push({ status: "delivered", at: ago(1), location: r.dest[0] });
   if (r.status === "exception")
-    timeline.push({ status: "exception", at: ago(1), location: "On route", note: "Vehicle breakdown reported" });
+    timeline.push({
+      status: "exception",
+      at: ago(1),
+      location: "On route",
+      note: "Vehicle breakdown reported",
+    });
 
   const audit: Shipment["audit"] = timeline.map((t, i) => ({
     id: `a-${idx}-${i}`,
@@ -205,15 +236,18 @@ function buildShipment(r: SeedRow, idx: number): Shipment {
     tempThresholdC: r.perishable ? 8 : undefined,
     createdAt: ago(r.createdAgoH),
     promisedAt: hours(r.promisedInH),
-    etaAt: hours(r.status === "delivered" ? -1 : r.status === "exception" ? 6 : Math.max(0.5, r.promisedInH - 1)),
+    etaAt: hours(
+      r.status === "delivered"
+        ? -1
+        : r.status === "exception"
+          ? 6
+          : Math.max(0.5, r.promisedInH - 1),
+    ),
     customer: r.customer,
     skus,
     timeline,
     audit,
-    pod:
-      r.status === "delivered"
-        ? { receivedBy: r.customer.name, at: ago(1) }
-        : undefined,
+    pod: r.status === "delivered" ? { receivedBy: r.customer.name, at: ago(1) } : undefined,
     costUsd: r.costUsd,
     distanceKm: dist,
   };

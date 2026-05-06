@@ -22,7 +22,7 @@ export function Timeline({ shipment }: { shipment: Shipment }) {
               className={cn(
                 "absolute -left-7 top-0.5 size-5 rounded-full border-2 grid place-items-center bg-card",
                 reached ? "border-primary text-primary" : "border-border text-muted-foreground",
-                current && "ring-4 ring-primary/20"
+                current && "ring-4 ring-primary/20",
               )}
             >
               {reached ? <Check className="size-3" /> : <Circle className="size-2 fill-current" />}
@@ -31,12 +31,14 @@ export function Timeline({ shipment }: { shipment: Shipment }) {
               <span
                 className={cn(
                   "absolute -left-[18px] top-5 w-px h-9",
-                  i < reachedIdx ? "bg-primary/60" : "bg-border"
+                  i < reachedIdx ? "bg-primary/60" : "bg-border",
                 )}
               />
             )}
             <div className="flex items-baseline justify-between gap-2">
-              <div className={cn("font-medium", reached ? "text-foreground" : "text-muted-foreground")}>
+              <div
+                className={cn("font-medium", reached ? "text-foreground" : "text-muted-foreground")}
+              >
                 {step.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
               </div>
               {event && (
@@ -45,7 +47,9 @@ export function Timeline({ shipment }: { shipment: Shipment }) {
                 </span>
               )}
             </div>
-            {event?.location && <div className="text-xs text-muted-foreground">{event.location}</div>}
+            {event?.location && (
+              <div className="text-xs text-muted-foreground">{event.location}</div>
+            )}
           </li>
         );
       })}

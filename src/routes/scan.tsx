@@ -18,7 +18,9 @@ function ScanPage() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [scanning, setScanning] = useState(false);
   const [manual, setManual] = useState("");
-  const [history, setHistory] = useState<{ id: string; ok: boolean; trackingId: string; ts: number }[]>([]);
+  const [history, setHistory] = useState<
+    { id: string; ok: boolean; trackingId: string; ts: number }[]
+  >([]);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const navigate = useNavigate();
 
@@ -32,14 +34,21 @@ function ScanPage() {
   const handleCode = (code: string) => {
     const s = findShipment(code);
     if (s) {
-      appendAudit(s.id, { actor: "scanner@lx", action: `Scanned at ${new Date().toLocaleTimeString()}` });
+      appendAudit(s.id, {
+        actor: "scanner@lx",
+        action: `Scanned at ${new Date().toLocaleTimeString()}`,
+      });
       toast.success(`Scanned ${s.trackingId}`);
-      setHistory((h) => [{ id: s.id, ok: true, trackingId: s.trackingId, ts: Date.now() }, ...h].slice(0, 8));
+      setHistory((h) =>
+        [{ id: s.id, ok: true, trackingId: s.trackingId, ts: Date.now() }, ...h].slice(0, 8),
+      );
       stopScan();
       navigate({ to: "/shipments/$id", params: { id: s.id } });
     } else {
       toast.error(`Unknown code: ${code}`);
-      setHistory((h) => [{ id: "?", ok: false, trackingId: code, ts: Date.now() }, ...h].slice(0, 8));
+      setHistory((h) =>
+        [{ id: "?", ok: false, trackingId: code, ts: Date.now() }, ...h].slice(0, 8),
+      );
     }
   };
 
@@ -55,7 +64,7 @@ function ScanPage() {
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 240, height: 240 } },
           (decoded) => handleCode(decoded),
-          () => {}
+          () => {},
         );
       } catch (e: any) {
         toast.error("Camera unavailable", { description: e?.message });
@@ -73,13 +82,20 @@ function ScanPage() {
     setScanning(false);
   };
 
-  useEffect(() => () => { stopScan(); }, []);
+  useEffect(
+    () => () => {
+      stopScan();
+    },
+    [],
+  );
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Scan & check-in</h1>
-        <p className="text-sm text-muted-foreground">Scan a QR or barcode label, or enter a tracking ID.</p>
+        <p className="text-sm text-muted-foreground">
+          Scan a QR or barcode label, or enter a tracking ID.
+        </p>
       </div>
 
       <Card className="p-4 bg-card/60 space-y-4">
@@ -91,7 +107,15 @@ function ScanPage() {
             className="mono"
             onKeyDown={(e) => e.key === "Enter" && manual && (handleCode(manual), setManual(""))}
           />
-          <Button onClick={() => { handleCode(manual); setManual(""); }} disabled={!manual}>Look up</Button>
+          <Button
+            onClick={() => {
+              handleCode(manual);
+              setManual("");
+            }}
+            disabled={!manual}
+          >
+            Look up
+          </Button>
         </div>
 
         {!scanning ? (
@@ -100,7 +124,10 @@ function ScanPage() {
           </Button>
         ) : (
           <div className="space-y-2">
-            <div id="qr-reader" className="rounded-md overflow-hidden border border-border bg-black [&_video]:w-full" />
+            <div
+              id="qr-reader"
+              className="rounded-md overflow-hidden border border-border bg-black [&_video]:w-full"
+            />
             <Button onClick={stopScan} variant="outline" className="w-full">
               <X className="size-4" /> Stop
             </Button>
@@ -108,7 +135,11 @@ function ScanPage() {
         )}
 
         <div className="text-[11px] mono text-muted-foreground border-t border-border pt-3">
-          tip: try one of these tracking IDs · {shipments.slice(0, 3).map((s) => s.trackingId).join(" · ")}
+          tip: try one of these tracking IDs ·{" "}
+          {shipments
+            .slice(0, 3)
+            .map((s) => s.trackingId)
+            .join(" · ")}
         </div>
       </Card>
 
@@ -120,7 +151,9 @@ function ScanPage() {
           <ul className="space-y-1.5 text-sm">
             {history.map((h, i) => (
               <li key={i} className="flex items-center justify-between mono text-xs">
-                <span className={h.ok ? "text-success" : "text-destructive"}>{h.ok ? "✓" : "✕"} {h.trackingId}</span>
+                <span className={h.ok ? "text-success" : "text-destructive"}>
+                  {h.ok ? "✓" : "✕"} {h.trackingId}
+                </span>
                 <span className="text-muted-foreground">{new Date(h.ts).toLocaleTimeString()}</span>
               </li>
             ))}
