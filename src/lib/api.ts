@@ -10,22 +10,33 @@ import type {
   AuditEntry,
 } from "@/types/shipment";
 import { pointAtProgress } from "@/lib/geo";
-import { SHIPMENTS, CARRIERS, GEOFENCES } from "@/data/seed"; // Imported for seeding the database
+import { SHIPMENTS, CARRIERS, GEOFENCES, generateRandomShipments } from "@/data/seed"; // Imported for seeding the database
 
 // Configure via your VITE_API_URL environment variable, falling back to local fallback
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-export async function seedDatabase() {
+export async function seedDatabase(count?: number) {
+  const shipmentsToUse = count ? generateRandomShipments(count) : SHIPMENTS;
+  
   const res = await fetch(`${API_URL}/api/seed`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      shipments: SHIPMENTS,
+      shipments: shipmentsToUse,
       carriers: CARRIERS,
       geofences: GEOFENCES,
+      append: !!count // If we pass a count, we append instead of wiping out the DB
     }),
   });
   if (!res.ok) throw new Error("Failed to seed database");
+  return res.json();
+}
+
+export async function clearDatabase() {
+  const res = await fetch(`${API_URL}/api/clear`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to clear database");
   return res.json();
 }
 

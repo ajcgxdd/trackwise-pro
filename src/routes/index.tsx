@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { ShipmentMap } from "@/components/map/ShipmentMap";
 import { StatusBadge } from "@/components/shipment/StatusBadge";
 import { Card } from "@/components/ui/card";
-import { getShipments, getGeofences, tickPositions, seedDatabase } from "@/lib/api";
+import { getShipments, getGeofences, tickPositions, seedDatabase, clearDatabase } from "@/lib/api";
 import type { Shipment, Geofence } from "@/types/shipment";
 import { Link } from "@tanstack/react-router";
-import { Package, Truck, AlertTriangle, CheckCircle2, ArrowRight, Database } from "lucide-react";
+import { Package, Truck, AlertTriangle, CheckCircle2, ArrowRight, Database, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/")({
@@ -83,6 +83,32 @@ function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={async () => {
+              await seedDatabase(10); // Generates and appends 10 new shipments
+              window.location.reload();
+            }}
+            className="text-[11px] mono flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded"
+          >
+            <Database className="size-3" />
+            ADD 10 SHIPMENTS
+          </button>
+          
+          {shipments.length > 0 && (
+            <button 
+              onClick={async () => {
+                if (confirm("Are you sure you want to clear all database data?")) {
+                  await clearDatabase();
+                  window.location.reload();
+                }
+              }}
+              className="text-[11px] mono flex items-center gap-1.5 bg-destructive/10 text-destructive px-3 py-1.5 rounded"
+            >
+              <Trash2 className="size-3" />
+              CLEAR DATA
+            </button>
+          )}
+
           {shipments.length === 0 && (
             <button 
               onClick={async () => {
@@ -92,7 +118,7 @@ function Dashboard() {
               className="text-[11px] mono flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded"
             >
               <Database className="size-3" />
-              SEED DATABASE
+              SEED INITIAL DATABASE
             </button>
           )}
           <div className="text-[11px] mono text-muted-foreground flex items-center gap-2">

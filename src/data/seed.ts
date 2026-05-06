@@ -186,10 +186,13 @@ const rows: SeedRow[] = [
   },
 ];
 
-function buildShipment(r: SeedRow, idx: number): Shipment {
+let shipmentIdCounter = Date.now();
+
+function buildShipment(r: SeedRow, customIdx?: number): Shipment {
   const route = buildRoute(r.origin[1], r.dest[1], 60);
   const dist = totalDistance(route);
   const current = pointAtProgress(route, r.progress);
+  const idx = customIdx ?? shipmentIdCounter++;
   const skus = r.skus.map((s, i) => ({ id: `sku-${idx}-${i}`, ...s }));
 
   const timeline: Shipment["timeline"] = [
@@ -253,4 +256,35 @@ function buildShipment(r: SeedRow, idx: number): Shipment {
   };
 }
 
-export const SHIPMENTS: Shipment[] = rows.map(buildShipment);
+export const SHIPMENTS: Shipment[] = rows.map((r, i) => buildShipment(r, i));
+
+export function generateRandomShipments(count: number): Shipment[] {
+  const generated: Shipment[] = [];
+  const statuses: Shipment["status"][] = ["ordered", "picked_up", "in_transit", "out_for_delivery", "delivered", "exception"];
+  
+  for (let i = 0; i < count; i++) {
+    const origin = GEOFENCES[Math.floor(Math.random() * GEOFENCES.length)];
+    let dest = GEOFENCES[Math.floor(Math.random() * GEOFENCES.length)];
+    while (dest.id === origin.id) dest = GEOFENCES[Math.floor(Math.random() * GEOFENCES.length)];
+    
+    const carrier = CARRIERS[Math.floor(Math.random() * CARRIERS.length)].id;
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const progress = status === "delivered" ? 1 : status === "ordered" ? 0 : Math.random() * 0.9;
+    
+    generated.push(buildShipment({
+      trackingId: `LX-${Math.floor(1000 + Math.random() * 9000)}-${origin.name.substring(0,2).toUpperCase()}-${dest.name.substring(0,2).toUpperCase()}`,
+      carrier,
+      origin: [origin.name, origin.center],
+      dest: [dest.name, dest.center],
+      status,
+      progress,
+      speed: Math.floor(40 + Math.random() * 40),
+      customer: { name: `Customer ${Math.floor(Math.random() * 1000)}`, phone: "+91 00000 00000", email: "dyn@example.com" },
+      skus: [{ name: "General Freight", qty: 1, weightKg: 10, value: 500 }],
+      promisedInH: Math.floor(Math.random() * 48),
+      createdAgoH: Math.floor(Math.random() * 48),
+      costUsd: Math.floor(100 + Math.random() * 1000)
+    }));
+  }
+  return generated;
+}

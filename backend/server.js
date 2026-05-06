@@ -170,24 +170,44 @@ app.post("/api/tick", async (req, res) => {
 // Used to reset and seed the database initially from the frontend mock data
 app.post("/api/seed", async (req, res) => {
   try {
-    const { shipments, carriers, geofences } = req.body;
+    const { shipments, carriers, geofences, append } = req.body;
     
     if (shipments && shipments.length > 0) {
-      await Shipment.deleteMany({});
+      if (!append) await Shipment.deleteMany({});
       await Shipment.insertMany(shipments);
     }
+    
     if (carriers && carriers.length > 0) {
-      await Carrier.deleteMany({});
-      await Carrier.insertMany(carriers);
+      const carrierCount = await Carrier.countDocuments();
+      if (!append || carrierCount === 0) {
+        await Carrier.deleteMany({});
+        await Carrier.insertMany(carriers);
+      }
     }
+    
     if (geofences && geofences.length > 0) {
-      await Geofence.deleteMany({});
-      await Geofence.insertMany(geofences);
+      const geoCount = await Geofence.countDocuments();
+      if (!append || geoCount === 0) {
+        await Geofence.deleteMany({});
+        await Geofence.insertMany(geofences);
+      }
     }
 
     res.json({ message: "Database successfully seeded!" });
   } catch (error) {
     console.error("Seed error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Used to completely clear all data from the database
+app.delete("/api/clear", async (req, res) => {
+  try {
+    await Shipment.deleteMany({});
+    await Carrier.deleteMany({});
+    await Geofence.deleteMany({});
+    res.json({ message: "Database cleared successfully!" });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
