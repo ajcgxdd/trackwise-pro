@@ -53,7 +53,7 @@ npm run dev
 
 ### 4. Seeding the Database
 Since your MongoDB database starts empty:
-1. Open the frontend in your browser (`http://localhost:5173`).
+1. Open the frontend in your browser, on the MongoDB website.
 2. Click the **SEED DATABASE** button located at the top-right of the Operations Dashboard.
 3. This pushes the mock JSON data directly into your newly connected MongoDB collections (`shipments`, `carriers`, `geofences`).
 
